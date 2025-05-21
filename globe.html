@@ -32,11 +32,12 @@
     <button onclick="closeModal()">Close</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three-globe@2.25.4/dist/three-globe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3-fetch@3.0.1/dist/d3-fetch.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <!-- Scripts: correct order and scope exposure -->
+  <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.150.1/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/three-globe@2.25.4/dist/three-globe.min.js"></script>
+  <script src="https://unpkg.com/d3-fetch@3"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
@@ -59,11 +60,10 @@
 
       scene.add(globe);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      scene.add(directionalLight);
-
-      const ambientLight = new THREE.AmbientLight(0xbbbbbb);
-      scene.add(ambientLight);
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(1, 1, 1);
+      scene.add(light);
+      scene.add(new THREE.AmbientLight(0x888888));
 
       const controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableZoom = true;
