@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Border Wall Globe</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    #globeViz { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 10;
+    }
+    #modal button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="globeViz"></div>
+  <div id="modal">
+    <div id="modal-content"></div>
+    <button onclick="closeModal()">Close</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three-globe@2.25.4/dist/three-globe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-fetch@3.0.1/dist/d3-fetch.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const globeContainer = document.getElementById('globeViz');
+      const globe = new ThreeGlobe()
+        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
+        .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+        .showAtmosphere(true)
+        .atmosphereAltitude(0.25);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      camera.position.z = 300;
+
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      globeContainer.appendChild(renderer.domElement);
+
+      scene.add(globe);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      scene.add(directionalLight);
+
+      const ambientLight = new THREE.AmbientLight(0xbbbbbb);
+      scene.add(ambientLight);
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableZoom = true;
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      d3.json('https://unpkg.com/world-atlas@2.0.2/countries-110m.json').then(countries => {
+        const geoJson = topojson.feature(countries, countries.objects.countries);
+        globe.polygonsData(geoJson.features)
+          .polygonCapColor(() => 'rgba(200, 200, 200, 0.15)')
+          .polygonSideColor(() => 'rgba(100, 100, 100, 0.2)')
+          .polygonStrokeColor(() => '#111')
+          .polygonLabel(({ properties: d }) => d.name);
+      });
+
+      const wallLocations = [
+        { lat: 31.332, lng: -110.703, name: "US-Mexico Border (Arizona)" },
+        { lat: 32.545, lng: 35.008, name: "Israel-West Bank Barrier" },
+        { lat: 24.743, lng: 91.634, name: "India-Bangladesh Border" }
+      ];
+
+      globe.pointsData(wallLocations)
+        .pointAltitude(0.01)
+        .pointColor(() => '#ff4444')
+        .pointLabel(d => d.name)
+        .onPointClick(d => openModal(d.name));
+
+      function openModal(content) {
+        document.getElementById('modal-content').innerText = content;
+        document.getElementById('modal').style.display = 'block';
+      }
+
+      window.closeModal = function () {
+        document.getElementById('modal').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
